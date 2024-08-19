@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Charging Stations Dashboard</title>
+   <style>
+       body {
+           font-family: Arial, sans-serif;
+           background-color: #f4f4f4;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           height: 100vh;
+       }
+       .dashboard {
+           background-color: #fff;
+           padding: 20px;
+           border-radius: 8px;
+           box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+       }
+       .station {
+           margin-bottom: 15px;
+       }
+       .station:last-child {
+           margin-bottom: 0;
+       }
+       .station h2 {
+           margin: 0;
+           font-size: 18px;
+       }
+       .station p {
+           margin: 5px 0;
+           font-size: 14px;
+       }
+   </style>
+</head>
+<body>
+   <div class="dashboard" id="dashboard">
+       <h1>Charging Stations Dashboard</h1>
+       <!-- Stations will be dynamically added here -->
+   </div>
+   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+   <script>
+       const client = mqtt.connect("ws://188.225.83.15:8080/mqtt");
+
+       client.on("connect", function () {
+           console.log("Connected to MQTT broker");
+           client.subscribe("/charging_stations/+/board_version");
+           client.subscribe("/charging_stations/+/firmware_version");
+           client.subscribe("/charging_stations/+/current");
+           client.subscribe("/charging_stations/+/voltage");
+           client.subscribe("/charging_stations/+/charge_status");
+           client.subscribe("/charging_stations/+/OCPP");
+           client.subscribe("/charging_stations/+/CHARGING");
+           client.subscribe("/charging_stations/+/PB_TEMP");
+           client.subscribe("/charging_stations/+/CB_TEMP");
+           client.subscribe("/charging_stations/+/POWER_A");
+           client.subscribe("/charging_stations/+/POWER_B");
+           client.subscribe("/charging_stations/+/POWER_C");
+           client.subscribe("/charging_stations/+/CURRENT_A");
+           client.subscribe("/charging_stations/+/CURRENT_B");
+           client.subscribe("/charging_stations/+/CURRENT_C");
+           client.subscribe("/charging_stations/+/VOLTAGE_A");
+           client.subscribe("/charging_stations/+/VOLTAGE_B");
+           client.subscribe("/charging_stations/+/VOLTAGE_C");
+           client.subscribe("/charging_stations/+/ENERGY_A");
+           client.subscribe("/charging_stations/+/RCD_INFO_REAL");
+           client.subscribe("/charging_stations/+/RCD_INFO_FALSE");
+        //    client.subscribe("/charging_stations/+/ENERGY_B");
+        //    client.subscribe("/charging_stations/+/ENERGY_C");
+       });
+
+       client.on("message", function (topic, message) {
+           const parts = topic.split("/");
+           const stationId = parts[2];
+           const parameter = parts[3];
+        //    const data = JSON.parse(message.toString());
+           const datA = message.toString();
+           console.log(datA);
+           updateDashboard(stationId, parameter, datA);
+       });
+
+       function updateDashboard(stationId, parameter, data) {
+           let stationDiv = document.getElementById(stationId);
+           if (!stationDiv) {
+<!--               stationDiv = document.createElement("div");-->
+               stationDiv = document.createElement("div");
+               stationDiv.id = stationId;
+               stationDiv.className = "station";
+               stationDiv.innerHTML = `<h2>Station: ${stationId}</h2>`;
+               document.getElementById("dashboard").appendChild(stationDiv);
+           }
+
+           const param_name = parameter.replace("_", " ");
+           const param_id = stationId + "_" + param_name
+ 
+           let subDiv = document.getElementById(param_id);
+           if (!subDiv) {
+               subDiv = document.createElement("p");
+               subDiv.id = param_id;
+               subDiv.className = "param";
+               stationDiv.appendChild(subDiv);
+<!--               document.getElementById("dashboard").appendChild(subDiv);-->
+           }
+           subDiv.innerHTML = `${param_name}: ${data}`;
+           
+
+<!--           const paramDiv = document.createElement("p");-->
+<!--           paramDiv.innerHTML = `${parameter.replace("_", " ")}: ${data[parameter]}`;-->
+<!--           stationDiv.appendChild(paramDiv);-->
+       }
+   </script>
+</body>
+</html>
